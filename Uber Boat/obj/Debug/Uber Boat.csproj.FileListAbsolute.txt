@@ -1,0 +1,11 @@
+D:\Projects\Uber Boat\Uber Boat\bin\Debug\Uber Boat.dll
+D:\Projects\Uber Boat\Uber Boat\bin\Debug\Uber Boat.pdb
+D:\Projects\Uber Boat\Uber Boat\bin\Debug\Lib K Relay.dll
+D:\Projects\Uber Boat\Uber Boat\obj\Debug\Uber Boat.csprojResolveAssemblyReference.cache
+D:\Projects\Uber Boat\Uber Boat\obj\Debug\Uber Boat.csproj.CoreCompileInputs.cache
+D:\Projects\Uber Boat\Uber Boat\obj\Debug\Uber Boat.dll
+D:\Projects\Uber Boat\Uber Boat\obj\Debug\Uber Boat.pdb
+D:\Backup A\Desktop-datadrivve\newest k relay\Plugins\Uber Boat.dll
+D:\Backup A\Desktop-datadrivve\newest k relay\Plugins\Uber Boat.pdb
+D:\Backup A\Desktop-datadrivve\22 relay\Plugins\Uber Boat.dll
+D:\Backup A\Desktop-datadrivve\22 relay\Plugins\Uber Boat.pdb

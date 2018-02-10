@@ -1,0 +1,5 @@
+D:\Backup A\Desktop-datadrivve\newest k relay\Plugins\Uber Boat.dll
+D:\Backup A\Desktop-datadrivve\newest k relay\Plugins\Uber Boat.pdb
+D:\Projects\Uber Boat\Uber Boat\obj\Release\Uber Boat.csproj.CoreCompileInputs.cache
+D:\Projects\Uber Boat\Uber Boat\obj\Release\Uber Boat.dll
+D:\Projects\Uber Boat\Uber Boat\obj\Release\Uber Boat.pdb
