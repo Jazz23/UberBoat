@@ -16,7 +16,7 @@
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
-    <OutputPath>..\..\..\Backup A\Desktop-datadrivve\22 relay\Plugins\</OutputPath>
+    <OutputPath>D:\Backup A\Desktop-datadrivve\22 relay\Plugins\</OutputPath>
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
@@ -31,7 +31,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="Lib K Relay">
-      <HintPath>..\..\..\Backup A\Desktop-datadrivve\22 relay\Lib K Relay.dll</HintPath>
+      <HintPath>D:\Backup A\Desktop-datadrivve\22 relay\Lib K Relay.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="System" />

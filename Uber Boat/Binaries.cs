@@ -31,8 +31,8 @@ namespace Uber_Boat
         {
             ReconnectPacket reconnect = (ReconnectPacket)Packet.Create(PacketType.RECONNECT);
             reconnect.IsFromArena = false;
-            reconnect.GameId = -2;
-            reconnect.KeyTime = 6969669;
+            reconnect.GameId = 0;
+            reconnect.KeyTime = client.Time;
             reconnect.Name = Name;
             reconnect.Stats = "";
             
