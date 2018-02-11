@@ -40,7 +40,7 @@ namespace Uber_Boat
         public static Entity Tele = null;
         WebClient web = new WebClient();
         public static int Interval = 25;
-        public static float Thiccness = 3;
+        public static float Thiccness = 2;
 
         public string[] GetCommands()
         {
@@ -98,7 +98,7 @@ namespace Uber_Boat
             Boat.Data = Data;
             Target = new Location(float.Parse(Data[0]), float.Parse(Data[1]));
             Interval = int.Parse(Data[4]);
-            Thiccness = int.Parse(Data[5]);
+            Thiccness = float.Parse(Data[5]);
             foreach (var player in Players)
             {
                 if (player.InRealm == false && player.Virgin == true)
