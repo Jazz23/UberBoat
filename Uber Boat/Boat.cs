@@ -48,7 +48,6 @@ namespace Uber_Boat
             {
                 "/enterq",
                 "/leaveq",
-                "/panic"
             };
         }
 
@@ -61,7 +60,7 @@ namespace Uber_Boat
             proxy.HookCommand("heck", Command);
             proxy.HookCommand("ip", Command);
             proxy.HookPacket<NewTickPacket>(NT);
-            proxy.HookPacket<UpdatePacket>(FindNearestPlayer);
+            proxy.HookPacket<UpdatePacket>(OnUpdate);
             proxy.HookPacket<GotoPacket>(OnTeleport);
             Task.Run(() => { while (true) Update(); });
             Task.Run(() => { while (true) { Move(); System.Threading.Thread.Sleep(Interval); } });
@@ -76,7 +75,7 @@ namespace Uber_Boat
             Task.Run(() => { Thread.Sleep(10100); player.WaitTele = false; });
         }
 
-        private void FindNearestPlayer(Client client, UpdatePacket packet)
+        private void OnUpdate(Client client, UpdatePacket packet)
         {
             Player player;
             if (!Exists(client, out player)) return;
@@ -152,7 +151,12 @@ namespace Uber_Boat
         private void SetClosestPlayer(Player player, NewTickPacket packet)
         {
             float Closest = 1000000000;
-            if (Tele != null) Closest = GetVecDistance(Tele.Status.Position, Target);
+            if (Tele != null)
+            {
+                Closest = GetVecDistance(Tele.Status.Position, Target);
+                if (packet.Statuses.Select(x => x.ObjectId).Contains(Tele.Status.ObjectId))
+                    Tele.Status.Position = packet.Statuses.Single(x => x.ObjectId == Tele.Status.ObjectId).Position;
+            }
             foreach (Status ent in packet.Statuses)
                 if (player.RenderedPlayers.Select(x => x.Status.ObjectId).Contains(ent.ObjectId))
                 {
@@ -213,6 +217,7 @@ namespace Uber_Boat
         private void SahDude(Player player, NewTickPacket NT)
         {
             string LastConnection = player.LastConnection;
+            UnPressAll(player);
             player.RenderedPlayers.Clear();
 
             if (player.InRealm && player.Virgin && player.WaitTele == false && LastConnection == "Realm of the Mad God")
@@ -262,7 +267,9 @@ namespace Uber_Boat
 
         private void SendTele(Player player)
         {
-            if (player.WaitTele || Tele == null || player.client.Connected == false || GetVecDistance(player.client.PlayerData.Pos, Target) <= GetVecDistance(Tele.Status.Position, Target)) return;
+            var idk = GetVecDistance(player.client.PlayerData.Pos, Target);
+            var tit = GetVecDistance(Tele.Status.Position, Target);
+            if (player.WaitTele || Tele == null || player.client.Connected == false || idk <= tit) return;
             PlayerTextPacket packet = (PlayerTextPacket)Packet.Create(PacketType.PLAYERTEXT);
             packet.Text = "/teleport " + Tele.Status.Data.Single(x => x.Id == StatsType.Name).StringValue;
             player.client.SendToServer(packet);

@@ -14,3 +14,4 @@ A:\Backup A\Desktop-datadrivve\22 relay\Plugins\Uber Boat.pdb
 A:\GitHub\Boat\Uber Boat\obj\Debug\Uber Boat.csproj.CoreCompileInputs.cache
 A:\GitHub\Boat\Uber Boat\obj\Debug\Uber Boat.dll
 A:\GitHub\Boat\Uber Boat\obj\Debug\Uber Boat.pdb
+A:\GitHub\Boat\Uber Boat\obj\Debug\Uber Boat.csprojResolveAssemblyReference.cache
