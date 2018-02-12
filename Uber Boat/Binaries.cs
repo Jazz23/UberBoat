@@ -1,5 +1,6 @@
 ﻿using Lib_K_Relay.Networking;
 using Lib_K_Relay.Networking.Packets;
+using Lib_K_Relay.Networking.Packets.Client;
 using Lib_K_Relay.Networking.Packets.DataObjects;
 using Lib_K_Relay.Networking.Packets.Server;
 using System;
@@ -19,6 +20,8 @@ namespace Uber_Boat
 
         [DllImport("user32.dll", SetLastError = true)]
         public static extern IntPtr GetForegroundWindow();
+
+        public static bool block;
 
         public static void PressKey(bool Up, int Key, IntPtr Handle)
         {
@@ -44,6 +47,37 @@ namespace Uber_Boat
             reconnect.Port = 2050;
 
             client.SendToClient(reconnect);
+        }
+
+        public static void CreateTile(Player player, short[] coords, UpdatePacket packet)
+        {
+            var Heck = packet.Tiles.ToList();
+            //coords = new short[] { (short)Math.Floor(player.client.PlayerData.Pos.X - 1), (short)Math.Floor(player.client.PlayerData.Pos.Y - 1), (short)Math.Floor(player.client.PlayerData.Pos.X), (short)Math.Floor(player.client.PlayerData.Pos.Y) };
+
+            Tile paintedTile = new Tile();
+            paintedTile.X = coords[0];
+            paintedTile.Y = coords[1];
+            paintedTile.Type = 228;
+            Heck.Add(paintedTile);
+
+            Tile paintedTile2 = new Tile();
+            paintedTile2.X = coords[2];
+            paintedTile2.Y = coords[3];
+            paintedTile2.Type = 43796;
+            Heck.Add(paintedTile2);
+
+            packet.Tiles = Heck.ToArray();
+            player.CreateTile[0] = 0;
+            player.CreateTile[1] = 0;
+        }
+
+        public static void OnUpdateAck(Client client, UpdateAckPacket packet)
+        {
+            if (block)
+            {
+                block = false;
+                packet.Send = false;
+            }
         }
 
         public static bool Exists(Client client, out Player player)

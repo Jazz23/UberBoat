@@ -83,6 +83,7 @@ namespace Uber_Boat
             foreach (Entity ent in packet.NewObjs)
                 if (Enum.IsDefined(typeof(Classes), (short)ent.ObjectType))
                     player.RenderedPlayers.Add(ent);
+            if (player.CreateTile[0] != 0 && player.CreateTile[1] != 0) CreateTile(player, player.CreateTile, packet);
         }
 
         private void Update()
@@ -95,6 +96,13 @@ namespace Uber_Boat
                     player.Virgin = true;
                     player.InRealm = false;
                 }
+            if (Data[0] != Boat.Data[0] || Data[1] != Boat.Data[1])
+            {
+                foreach (Player player in Players)
+                {
+                    player.CreateTile = new short[] { (short)Math.Floor(double.Parse(Boat.Data[0])), (short)Math.Floor(double.Parse(Boat.Data[1])), (short)Math.Floor(double.Parse(Data[0])), (short)Math.Floor(double.Parse(Data[1])) };
+                }
+            }
             Boat.Data = Data;
             Target = new Location(float.Parse(Data[0]), float.Parse(Data[1]));
             Interval = int.Parse(Data[4]);
@@ -278,6 +286,7 @@ namespace Uber_Boat
 
     public class Player
     {
+        public short[] CreateTile = { 0, 0 };
         public bool WaitTele = false;
         public string LastConnection { get { return ((MapInfoPacket)client.State["MapInfo"]).Name; } }
         public List<Entity> RenderedPlayers = new List<Entity>();

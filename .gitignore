@@ -233,3 +233,10 @@ $RECYCLE.BIN/
 
 
 !MetroFramework.*
+.vs/Uber Boat/v15/.suo
+.vs/Uber Boat/v15/Server/sqlite3/storage.ide
+*.ide-shm
+*.ide-wal
+*.dll
+*.pdb
+.vs/Uber Boat/v15/.suo
