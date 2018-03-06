@@ -14,7 +14,8 @@ using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
 using static Uber_Boat.Binaries;
-
+using static Uber_Boat.WinApi;
+//var idk = DateTime.Now.ToUniversalTime().Subtract(new DateTime(2000, 1, 1, 0, 0, 0, DateTimeKind.Utc)).TotalMilliseconds % 800;    - Algorithm to calcuate coordinate point from starting point.
 namespace Uber_Boat
 {
     public class Boat : IPlugin
@@ -35,7 +36,10 @@ namespace Uber_Boat
         }
         
         public static string[] Data = new string[] { "dank", "memes" };
+        DateTime Kernel = new DateTime(2018, 02, 19, 22, 44, 21, DateTimeKind.Utc);
         public static Location Target;
+        public static Location[] coords;
+        public static int Speed = 50;
         public static List<Player> Players = new List<Player>();
         public static Entity Tele = null;
         WebClient web = new WebClient();
@@ -61,9 +65,17 @@ namespace Uber_Boat
             proxy.HookCommand("ip", Command);
             proxy.HookPacket<NewTickPacket>(NT);
             proxy.HookPacket<UpdatePacket>(OnUpdate);
+            proxy.HookPacket<UpdateAckPacket>(OnUpdateAck);
             proxy.HookPacket<GotoPacket>(OnTeleport);
-            Task.Run(() => { while (true) Update(); });
-            Task.Run(() => { while (true) { Move(); System.Threading.Thread.Sleep(Interval); } });
+            proxy.ClientDisconnected += onDisconnect;
+            Task.Run(() => { while (true) { Update(); Thread.Sleep(1000); } });
+            Task.Run(() => { while (true) { Move(); Thread.Sleep(Interval); } });
+        }
+
+        private void onDisconnect(Client client)
+        {
+            Player player;
+            if (!Exists(client, out player)) return;
         }
 
         private void OnTeleport(Client client, GotoPacket packet)
@@ -79,42 +91,55 @@ namespace Uber_Boat
         {
             Player player;
             if (!Exists(client, out player)) return;
+            player.blockcount++;
             if (!player.InRealm || player.LastConnection != "Realm of the Mad God") return;
             foreach (Entity ent in packet.NewObjs)
                 if (Enum.IsDefined(typeof(Classes), (short)ent.ObjectType))
                     player.RenderedPlayers.Add(ent);
-            if (player.CreateTile[0] != 0 && player.CreateTile[1] != 0) CreateTile(player, player.CreateTile, packet);
+        }
+
+        private void OnUpdateAck(Client client, UpdateAckPacket packet)
+        {
+            Player player;
+            if (!Exists(client, out player)) return;
+            if (player.blockcount == 0) packet.Send = false;
+            else player.blockcount--;
         }
 
         private void Update()
         {
-            string[] Data = web.DownloadString("https://supremacy.gq/Boat/data.txt").Split(':');
+            string[] Data;
+            try
+            {
+                Data = web.DownloadString("https://supremacy.gq/Boat/data.txt").Split(':');
+            }
+            catch
+            {
+                return;
+            }
             if (Data.Count() != 6) return;
-            if (Boat.Data.Count() == 6 && Boat.Data[2] != Data[2])
+            if (Boat.Data.Count() == 6 && (Boat.Data[1] != Data[1] | Boat.Data[2] != Data[2]))
                 foreach (Player player in Players)
                 {
                     player.Virgin = true;
-                    player.InRealm = false;
+                    SendReconnect(player.client, Data[1], Data[2]);
                 }
-            if (Data[0] != Boat.Data[0] || Data[1] != Boat.Data[1])
-            {
-                foreach (Player player in Players)
-                {
-                    player.CreateTile = new short[] { (short)Math.Floor(double.Parse(Boat.Data[0])), (short)Math.Floor(double.Parse(Boat.Data[1])), (short)Math.Floor(double.Parse(Data[0])), (short)Math.Floor(double.Parse(Data[1])) };
-                }
-            }
+
             Boat.Data = Data;
-            Target = new Location(float.Parse(Data[0]), float.Parse(Data[1]));
+            string world = web.DownloadString("https://supremacy.gq/Boat/Worlds/" + Data[0] + ".txt");
+
+            coords = world.Split('\n').Select(x => { return new Location(float.Parse(x.Split(':')[0]), float.Parse(x.Split(':')[1])); }).ToArray(); // Stupidly long line of code but it saves a couple of lines in the end ¯\_(ツ)_/¯
             Interval = int.Parse(Data[4]);
             Thiccness = float.Parse(Data[5]);
-            foreach (var player in Players)
-            {
-                if (player.InRealm == false && player.Virgin == true)
-                {
-                    player.InRealm = true;
-                    SendReconnect(player.client, Data[2], Data[3]);
-                }
-            }
+            Speed = int.Parse(Data[3]);
+            //foreach (var player in Players)
+            //{
+            //    if (player.InRealm == false && player.Virgin == true)
+            //    {
+            //        player.InRealm = true;
+            //        SendReconnect(player.client, Data[1], Data[2]);
+            //    }
+            //}
         }
 
         private void Move()
@@ -122,8 +147,15 @@ namespace Uber_Boat
             if (Players.Count == 0) return;
             try
             {
+                int coord = ((int)DateTime.Now.ToUniversalTime().Subtract(Kernel).TotalMilliseconds / Speed) % (coords.Count() - 1);
+                Target = coords[coord];
                 foreach (Player player in Players)
                 {
+                    //if (!((short)Math.Floor(coords[coord - 1].X) == player.CreateTile[0] && (short)Math.Floor(coords[coord - 1].Y) == player.CreateTile[1]))
+                    //{
+                    //    player.CreateTile = new short[] { (short)Math.Floor(coords[coord - 1].X), (short)Math.Floor(coords[coord - 1].Y), (short)Math.Floor(Target.X), (short)Math.Floor(Target.Y) };
+                    //    CreateTile(player);
+                    //}
                     if (!player.InRealm || player.Virgin || Data.Count() == 0 || Data.Contains("heck")) return;
                     if (GetVecDistance(player.client.PlayerData.Pos, Target) >= Thiccness + 30 && player.WaitTele == false) SendTele(player);
                     Gotowards(player, Target);
@@ -134,14 +166,19 @@ namespace Uber_Boat
 
         private void Gotowards(Player player, Location Target)
         {
-            float x, y; x = Target.X; y = Target.X;
+            float x, y; x = Target.X; y = Target.Y;
             float X, Y; X = player.client.PlayerData.Pos.X; Y = player.client.PlayerData.Pos.Y;
             List<int> KeysDown = new List<int>();
             if (X > x && Math.Abs(X - x) > Thiccness) KeysDown.Add(0x41);
             else if (X < x && Math.Abs(X - x) > Thiccness) KeysDown.Add(0x44);
             if (Y > y && Math.Abs(Y - y) > Thiccness) KeysDown.Add(0x57);
             else if (Y < y && Math.Abs(Y - y) > Thiccness) KeysDown.Add(0x53);
-            /*if (!(player.Pressed.Count() == 0 && KeysDown.Count() == 0)) */PressAll(KeysDown.ToArray(), player);
+            player.MoveCount++;
+            if (player.MoveCount > 200)
+            {
+                ResetKeys(player);
+            }
+                PressAll(KeysDown.ToArray(), player);
         }
 
         private void NT(Client client, NewTickPacket packet)
@@ -177,20 +214,6 @@ namespace Uber_Boat
                 }
         }
 
-        private void PressAll(int[] Keys, Player player)
-        {
-            foreach (var Key in Keys) PressKey(false, Key, player.Handle);
-            foreach (int Key in new int[] { 0x41, 0x44, 0x57, 0x53 })
-            {
-                if (!Keys.Contains(Key))
-                    PressKey(true, Key, player.Handle);
-            }
-            //foreach (var Key in Keys) { if (!player.Pressed.Contains(Key)) { player.Pressed.Add(Key); PressKey(false, Key, player.Handle); } }
-            //List<int> RemoveList = new List<int>();
-            //foreach (var Key in player.Pressed.Where(x => !Keys.Contains(x))) { RemoveList.Add(Key); PressKey(true, Key, player.Handle); }
-            //player.Pressed = player.Pressed.Except(RemoveList).ToList();
-        }
-
         private void Command(Client client, string command, string[] args)
         {
             if (command == "enterq")
@@ -200,6 +223,7 @@ namespace Uber_Boat
                 if (Exists(client, out heck)) { client.SendToClient(PluginUtils.CreateNotification(client.ObjectId, "Already in Queue")); return; }
                 Players.Add(new Player(GetForegroundWindow(), client));
                 client.SendToClient(PluginUtils.CreateNotification(client.ObjectId, "Entered Boat"));
+                SendReconnect(client, Data[1], Data[2]);
             }
             else if (command == "leaveq")
             {
@@ -265,8 +289,8 @@ namespace Uber_Boat
             {
                 if (Tele != null)
                 {
-                    SendTele(player);
                     UnPressAll(player);
+                    SendTele(player);
                 }
                 Thread.Sleep(10000);
             }
@@ -287,15 +311,17 @@ namespace Uber_Boat
     public class Player
     {
         public short[] CreateTile = { 0, 0 };
+        public int MoveCount = 0;
         public bool WaitTele = false;
+        public int blockcount = 0;
         public string LastConnection { get { return ((MapInfoPacket)client.State["MapInfo"]).Name; } }
         public List<Entity> RenderedPlayers = new List<Entity>();
-        public bool InRealm = false;
-        public bool Virgin = true;
+        public bool InRealm = true;
+        public bool Virgin = true;       // jdjfjklfadskjlfdsljk;fsd;lkjasfjkl;fsdjkl;fsdlkjdfslkjfdsjkl;jlk
         public string Name;
         public IntPtr Handle;
         public Client client;
-        //public List<int> Pressed = new List<int>();
+        public List<int> Pressed = new List<int>();
         public Player(IntPtr Handle, Client client)
         {
             this.Name = client.PlayerData.Name;

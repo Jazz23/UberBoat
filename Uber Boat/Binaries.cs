@@ -10,24 +10,49 @@ using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
 using static Uber_Boat.Boat;
+using static Uber_Boat.WinApi;
 
 namespace Uber_Boat
 {
     class Binaries
     {
-        [DllImport("user32.dll", CharSet = CharSet.Auto)]
-        public static extern IntPtr SendMessage(IntPtr hWnd, UInt32 Msg, IntPtr wParam, IntPtr lParam);
+        public static int[] Keys = new int[] { 0x41, 0x44, 0x57, 0x53 };
 
-        [DllImport("user32.dll", SetLastError = true)]
-        public static extern IntPtr GetForegroundWindow();
+        public static void PressAll(int[] Keys, Player player)
+        {
+            //foreach (var Key in Keys) PressKey(false, Key, player.Handle);
+            //foreach (int Key in new int[] { 0x41, 0x44, 0x57, 0x53 })
+            //{
+            //    if (!Keys.Contains(Key))
+            //        PressKey(true, Key, player.Handle);
+            //}
+            foreach (var Key in Keys)
+            {
+                if (!player.Pressed.Contains(Key))
+                {
+                    player.Pressed.Add(Key);
+                    PressKey(false, Key, player.Handle);
+                }
+            }
+            foreach (var Key in player.Pressed.Where(x => !Keys.Contains(x)).ToList())
+            {
+                player.Pressed.Remove(Key);
+                PressKey(true, Key, player.Handle);
+            }
+        }
 
-        public static bool block;
+        public static void ResetKeys(Player player)
+        {
+            UnPressAll(player);
+            foreach (int key in player.Pressed)
+            {
+                PressKey(false, key, player.Handle);
+            }
+        }
 
         public static void PressKey(bool Up, int Key, IntPtr Handle)
         {
-            uint Press = 0;
-            if (Up == true) Press = 0x101; else Press = 0x100;
-            SendMessage(Handle, Press, new IntPtr(Key), new IntPtr(0));
+            SendMessage(Handle, (uint)(Up ? 0x101 : 0x100), new IntPtr(Key), new IntPtr(0));
         }
 
         public static void SendReconnect(Client client, string ip, string Name)
@@ -49,9 +74,13 @@ namespace Uber_Boat
             client.SendToClient(reconnect);
         }
 
-        public static void CreateTile(Player player, short[] coords, UpdatePacket packet)
+        public static void CreateTile(Player player)
         {
-            var Heck = packet.Tiles.ToList();
+            var coords = player.CreateTile;
+            var Heck = new List<Tile>();
+            UpdatePacket packet = (UpdatePacket)Packet.Create(PacketType.UPDATE);
+            packet.Drops = new int[0];
+            packet.NewObjs = new Entity[0];
             //coords = new short[] { (short)Math.Floor(player.client.PlayerData.Pos.X - 1), (short)Math.Floor(player.client.PlayerData.Pos.Y - 1), (short)Math.Floor(player.client.PlayerData.Pos.X), (short)Math.Floor(player.client.PlayerData.Pos.Y) };
 
             Tile paintedTile = new Tile();
@@ -67,26 +96,14 @@ namespace Uber_Boat
             Heck.Add(paintedTile2);
 
             packet.Tiles = Heck.ToArray();
-            player.CreateTile[0] = 0;
-            player.CreateTile[1] = 0;
-        }
-
-        public static void OnUpdateAck(Client client, UpdateAckPacket packet)
-        {
-            if (block)
-            {
-                block = false;
-                packet.Send = false;
-            }
+            player.client.SendToClient(packet);
         }
 
         public static bool Exists(Client client, out Player player)
         {
             if (Players.Count() == 0) { player = null; return false; }
             try { string Name = client.PlayerData.Name; } catch { player = null; return false; }
-            List<string> PlayerList = new List<string>();
-            foreach (var Player in Players) PlayerList.Add(Player.Name);
-            if (PlayerList.Contains(client.PlayerData.Name))
+            if (Players.Select(x => x.Name).Contains(client.PlayerData.Name))
             {
                 player = Players.Where(x => x.Name == client.PlayerData.Name).First();
                 return true;
@@ -100,7 +117,7 @@ namespace Uber_Boat
 
         public static void UnPressAll(Player player)
         {
-            foreach (int Key in new int[] { 0x41, 0x44, 0x57, 0x53 })
+            foreach (int Key in Keys)
                 PressKey(true, Key, player.Handle);
         }
 
