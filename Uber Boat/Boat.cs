@@ -144,7 +144,7 @@ namespace Uber_Boat
 
         private void Move()
         {
-            if (Players.Count == 0) return;
+            if (Players.Count() == 0) return;
             try
             {
                 int coord = ((int)DateTime.Now.ToUniversalTime().Subtract(Kernel).TotalMilliseconds / Speed) % (coords.Count() - 1);
@@ -157,12 +157,26 @@ namespace Uber_Boat
                     //    CreateTile(player);
                     //}
                     if (!player.InRealm || player.Virgin || Data.Count() == 0 || Data.Contains("heck")) return;
-                    if (GetVecDistance(player.client.PlayerData.Pos, Target) >= Thiccness + 30 && player.WaitTele == false) SendTele(player);
+                    if (GetVecDistance(player.client.PlayerData.Pos, Target) >= Thiccness + 15 && player.WaitTele == false) SendTele(player);
+                    //if (player.holdup == false) Task.Run(() => { UseAbility(player); });
                     Gotowards(player, Target);
                 }
             }
             catch { } // if the player leaves mid loop its rip
         }
+
+        //private void UseAbility(Player player)
+        //{
+        //    player.holdup = true;
+        //    UseItemPacket packet = (UseItemPacket)Packet.Create(PacketType.USEITEM);
+        //    SlotObject slot = new SlotObject();
+        //    slot.ObjectId = player.
+        //    packet.ItemUsePos = player.client.PlayerData.Pos;
+        //    packet.
+        //    player.client.SendToClient()
+        //    Thread.Sleep(1500);
+        //    player.holdup = false;
+        //}
 
         private void Gotowards(Player player, Location Target)
         {
@@ -174,9 +188,10 @@ namespace Uber_Boat
             if (Y > y && Math.Abs(Y - y) > Thiccness) KeysDown.Add(0x57);
             else if (Y < y && Math.Abs(Y - y) > Thiccness) KeysDown.Add(0x53);
             player.MoveCount++;
-            if (player.MoveCount > 200)
+            if (player.MoveCount > 50)
             {
                 ResetKeys(player);
+                player.MoveCount = 0;
             }
                 PressAll(KeysDown.ToArray(), player);
         }
@@ -195,21 +210,24 @@ namespace Uber_Boat
 
         private void SetClosestPlayer(Player player, NewTickPacket packet)
         {
-            float Closest = 1000000000;
+            float closest = GetVecDistance(player.client.PlayerData.Pos, Target);
             if (Tele != null)
             {
-                Closest = GetVecDistance(Tele.Status.Position, Target);
+                //closest = GetVecDistance(Tele.Status.Position, Target);
                 if (packet.Statuses.Select(x => x.ObjectId).Contains(Tele.Status.ObjectId))
                     Tele.Status.Position = packet.Statuses.Single(x => x.ObjectId == Tele.Status.ObjectId).Position;
             }
             foreach (Status ent in packet.Statuses)
                 if (player.RenderedPlayers.Select(x => x.Status.ObjectId).Contains(ent.ObjectId))
                 {
-                    float Distance = GetVecDistance(ent.Position, Target);
-                    if (Distance < Closest)
+                    float distance = GetVecDistance(ent.Position, Target);
+
+                    if (distance < closest)
                     {
-                        Closest = Distance;
+                        if (Tele != null) Console.WriteLine(closest + ", " + Tele.Status.Data.Single(x => x.Id == StatsType.Name).StringValue);
+                        closest = distance;
                         Tele = player.RenderedPlayers.Single(x => x.Status.ObjectId == ent.ObjectId);
+                        Console.WriteLine(distance + ", " + Tele.Status.Data.Single(x => x.Id == StatsType.Name).StringValue);
                     }
                 }
         }
@@ -280,7 +298,7 @@ namespace Uber_Boat
                 Thread.Sleep(1);
             }
             player.InRealm = true;
-            SendReconnect(player.client, Data[2], Data[3]);
+            SendReconnect(player.client, Data[1], Data[2]);
         }
 
         private void Teleport(Player player)
@@ -310,6 +328,7 @@ namespace Uber_Boat
 
     public class Player
     {
+        public bool holdup = false;
         public short[] CreateTile = { 0, 0 };
         public int MoveCount = 0;
         public bool WaitTele = false;
