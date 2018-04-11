@@ -14,4 +14,8 @@ A:\Backup A\Desktop-datadrivve\22 relay\Plugins\Uber Boat.pdb
 A:\GitHub\Boat\Uber Boat\obj\Debug\Uber Boat.csproj.CoreCompileInputs.cache
 A:\GitHub\Boat\Uber Boat\obj\Debug\Uber Boat.dll
 A:\GitHub\Boat\Uber Boat\obj\Debug\Uber Boat.pdb
+D:\Backup A\Desktop-datadrivve\K Relay [X24.0.0]\Plugins\Uber Boat.dll
+D:\Backup A\Desktop-datadrivve\K Relay [X24.0.0]\Plugins\Uber Boat.pdb
+D:\Backup A\Desktop-datadrivve\22 relay - Copy (2)\Plugins\Uber Boat.dll
+D:\Backup A\Desktop-datadrivve\22 relay - Copy (2)\Plugins\Uber Boat.pdb
 A:\GitHub\Boat\Uber Boat\obj\Debug\Uber Boat.csprojResolveAssemblyReference.cache
