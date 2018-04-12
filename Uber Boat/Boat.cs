@@ -82,6 +82,14 @@ namespace Uber_Boat
             };
         }
 
+        //_______________________________________
+
+        ////THINGS TO ADD: LOAD A CLOCK FROM THE INTERWEBS AND THEN HAVE A STOPWATCH BASED OFF THAT
+        ////    NEXUS WHEN CASTLE
+
+        //    ___________________________
+
+
         private void onDisconnect(Client client)
         {
             bPlayer player;
@@ -259,6 +267,14 @@ namespace Uber_Boat
             string LastConnection = player.LastConnection;
             UnPressAll(player);
             player.WaitTele = false;
+            PluginUtils.Delay(15000, () =>
+            {
+                if (player.LastConnection == "Nexus" && player.InRealm)
+                {
+                    player.InRealm = true;
+                    player.GotoRealm();
+                }
+            });
 
             if (player.InRealm && player.Virgin && LastConnection == "Realm of the Mad God")
             {
@@ -285,6 +301,7 @@ namespace Uber_Boat
                 if (player.DontLeave)
                 {
                     player.DontLeave = false;
+                    player.GotoRealm();
                 }
                 else
                 {
