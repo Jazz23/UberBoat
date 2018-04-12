@@ -209,12 +209,6 @@ namespace Uber_Boat
             else if (X < x && Math.Abs(X - x) > Thiccness) KeysDown.Add(0x44);
             if (Y > y && Math.Abs(Y - y) > Thiccness) KeysDown.Add(0x57);
             else if (Y < y && Math.Abs(Y - y) > Thiccness) KeysDown.Add(0x53);
-            player.MoveCount++;
-            if (player.MoveCount > 50)
-            {
-                ResetKeys(player);
-                player.MoveCount = 0;
-            }
             PressAll(KeysDown.ToArray(), player);
         }
 
@@ -246,6 +240,7 @@ namespace Uber_Boat
                 bPlayer player;
                 if (Exists(client, out player))
                 {
+                    player.Dispose();
                     Players.Remove(player);
                     client.SendToClient(PluginUtils.CreateNotification(client.ObjectId, "Left Boat"));
                     UnPressAll(player);
@@ -269,7 +264,7 @@ namespace Uber_Boat
             player.WaitTele = false;
             PluginUtils.Delay(15000, () =>
             {
-                if (player.LastConnection == "Nexus" && player.InRealm)
+                if (player.InRealm && player.LastConnection == "Nexus")
                 {
                     player.InRealm = true;
                     player.GotoRealm();
@@ -278,26 +273,26 @@ namespace Uber_Boat
 
             if (player.InRealm && player.Virgin && LastConnection == "Realm of the Mad God")
             {
-                Console.WriteLine("1 sah");
+                //Console.WriteLine("1 sah");
                 //SetBoatStuff(player);
 
                 Task.Run(() => Teleport(player));
             }
             else if (player.InRealm && player.client.PlayerData.Health < player.client.PlayerData.MaxHealth && LastConnection == "Nexus")
             {
-                Console.WriteLine("2 sah");
+                //Console.WriteLine("2 sah");
                 player.InRealm = false;
                 Task.Run(() => Heal(player));
             }
             else if (player.InRealm && LastConnection == "Realm of the Mad God")
             {
-                Console.WriteLine("3 sah");
+                //Console.WriteLine("3 sah");
                 //SetBoatStuff(player);
                 SendTele(player);
             }
             else if (player.InRealm && LastConnection == "Nexus")
             {
-                Console.WriteLine("4 sah");
+                //Console.WriteLine("4 sah");
                 if (player.DontLeave)
                 {
                     player.DontLeave = false;
@@ -363,7 +358,6 @@ namespace Uber_Boat
         public bool DontLeave = false;
         public bool holdup = false;
         public short[] CreateTile = { 0, 0 };
-        public int MoveCount = 0;
         public bool WaitTele = false;
         public bool block = false;
         public string LastConnection { get { return ((MapInfoPacket)client.State["MapInfo"]).Name; } }
@@ -373,11 +367,25 @@ namespace Uber_Boat
         public IntPtr Handle;
         public Client client;
         public List<int> Pressed = new List<int>();
+        private bool disposed = false;
         public bPlayer(IntPtr Handle, Client client)
         {
             this.Name = client.PlayerData.Name;
             this.Handle = Handle;
             this.client = client;
+            Task.Run(() =>
+            {
+                while (!disposed)
+                {
+                    Thread.Sleep(10000);
+                    ResetKeys(this);
+                }
+            });
+        }
+
+        public void Dispose()
+        {
+            disposed = true;
         }
 
         public void GotoRealm()
